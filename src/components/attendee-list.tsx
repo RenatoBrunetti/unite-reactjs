@@ -1,4 +1,6 @@
 import { ChangeEvent, useState } from "react";
+import { formatDistance } from "date-fns";
+import { enUS } from "date-fns/locale";
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,6 +15,8 @@ import { Table } from "./table/table";
 import { TableHeader } from "./table/table-header";
 import { TableCell } from "./table/table-cell";
 import { TableRow } from "./table/table-row";
+
+import { attendees } from "../data/attendees";
 
 export function AttendeeList() {
   const [search, setSearch] = useState("");
@@ -54,9 +58,9 @@ export function AttendeeList() {
           </tr>
         </thead>
         <tbody>
-          {Array.from({ length: 10 }).map((_, _index) => (
+          {attendees.map((attendee) => (
             <TableRow
-              key={_index}
+              key={attendee.id}
               className="border-b border-white/10 hover:bg-white/5"
             >
               <TableCell>
@@ -65,17 +69,27 @@ export function AttendeeList() {
                   className="size-4 bg-black/20 rounded border border-white/10"
                 />
               </TableCell>
-              <TableCell>
-                {Math.floor(Math.random() * (9999 - 1000) + 1000)}
-              </TableCell>
+              <TableCell>{attendee.id}</TableCell>
               <TableCell>
                 <div className="flex flex-col gap-1">
-                  <span className="font-semibold text-white">John Doe</span>
-                  <span>john.doe@mail.com</span>
+                  <span className="font-semibold text-white">
+                    {attendee.name}
+                  </span>
+                  <span>{attendee.email}</span>
                 </div>
               </TableCell>
-              <TableCell>7 days ago</TableCell>
-              <TableCell>5 days ago</TableCell>
+              <TableCell>
+                {formatDistance(attendee.createdAt, new Date(), {
+                  locale: enUS,
+                  addSuffix: true,
+                })}
+              </TableCell>
+              <TableCell>
+                {formatDistance(attendee.checkedInAt, new Date(), {
+                  locale: enUS,
+                  addSuffix: true,
+                })}
+              </TableCell>
               <TableCell>
                 <IconButton transparent>
                   <MoreHorizontal className="size-4" />
