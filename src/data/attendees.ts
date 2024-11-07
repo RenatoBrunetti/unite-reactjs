@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
+import { Attendee } from "../type/attendee";
 
-export const attendees = Array.from({ length: 200 }).map(() => ({
+export const attendees: Attendee[] = Array.from({ length: 200 }).map(() => ({
   id: faker.string.uuid(),
   code: faker.number.int({ min: 10000, max: 20000 }),
   name: faker.person.fullName(),

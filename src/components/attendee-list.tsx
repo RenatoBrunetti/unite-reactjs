@@ -18,23 +18,22 @@ import { TableRow } from "./table/table-row";
 
 import { attendees } from "../data/attendees";
 
-const offset = 10;
-
 export function AttendeeList() {
-  const hasPageBeenRendered = useRef(false);
+  const offset = 10;
+  const lastPage = Math.ceil(attendees.length / offset);
+
+  const hasPaginationBeenRendered = useRef(false);
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState(1);
   const [minPaginationValues, setMinPaginationValues] = useState(1);
   const [maxPaginationValues, setMaxPaginationValues] = useState(offset);
 
-  const lastPage = Math.ceil(attendees.length / offset);
-
   useEffect(() => {
-    if (hasPageBeenRendered.current) {
+    if (hasPaginationBeenRendered.current) {
       setMinPaginationValues((pagination - 1) * offset);
       setMaxPaginationValues(pagination * offset);
     }
-    hasPageBeenRendered.current = true;
+    hasPaginationBeenRendered.current = true;
   }, [pagination]);
 
   // Search
@@ -159,28 +158,24 @@ export function AttendeeList() {
                   <IconButton
                     onClick={goToFirstPage}
                     disabled={pagination === 1}
-                    transparent={pagination === 1}
                   >
                     <ChevronsLeft className="size-4" />
                   </IconButton>
                   <IconButton
                     onClick={goToPreviousPage}
                     disabled={pagination === 1}
-                    transparent={pagination === 1}
                   >
                     <ChevronLeft className="size-4" />
                   </IconButton>
                   <IconButton
                     onClick={goToNextPage}
                     disabled={pagination === lastPage}
-                    transparent={pagination === lastPage}
                   >
                     <ChevronRight className="size-4" />
                   </IconButton>
                   <IconButton
                     onClick={goToLastPage}
                     disabled={pagination === lastPage}
-                    transparent={pagination === lastPage}
                   >
                     <ChevronsRight className="size-4" />
                   </IconButton>
