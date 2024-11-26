@@ -16,22 +16,37 @@ import { TableHeader } from "./table/table-header";
 import { TableCell } from "./table/table-cell";
 import { TableRow } from "./table/table-row";
 
-import { attendees } from "../data/attendees";
+const server = "http://localhost:3333";
+interface Attendee {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  checkedInAt: string | null;
+}
 
 export function AttendeeList() {
-  const offset = 10;
-  const lastPage = Math.ceil(attendees.length / offset);
-
   const hasPaginationBeenRendered = useRef(false);
   const [search, setSearch] = useState("");
+  const [total, setTotal] = useState(0);
   const [pagination, setPagination] = useState(1);
-  const [minPaginationValues, setMinPaginationValues] = useState(1);
-  const [maxPaginationValues, setMaxPaginationValues] = useState(offset);
+  const [attendees, setAttendees] = useState<Attendee[]>([]);
+
+  const offset = 10;
+  const totalPages = Math.ceil(total / offset);
 
   useEffect(() => {
     if (hasPaginationBeenRendered.current) {
-      setMinPaginationValues((pagination - 1) * offset);
-      setMaxPaginationValues(pagination * offset);
+      const eventId = "9e9bd979-9d10-4915-b339-3786b1634f70";
+      const path = `/events/${eventId}/attendees`;
+      const params = `?pageIndex=${pagination - 1}`;
+      const url = server.concat(path, params);
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          setAttendees(data.attendees);
+          setTotal(data.total);
+        });
     }
     hasPaginationBeenRendered.current = true;
   }, [pagination]);
@@ -55,14 +70,14 @@ export function AttendeeList() {
   }
 
   function goToNextPage() {
-    if (pagination < lastPage) {
+    if (pagination < totalPages) {
       setPagination((current) => current + 1);
     }
   }
 
   function goToLastPage() {
-    if (pagination < lastPage) {
-      setPagination(lastPage);
+    if (pagination < totalPages) {
+      setPagination(totalPages);
     }
   }
 
@@ -75,7 +90,7 @@ export function AttendeeList() {
           <input
             onChange={onSearchInputChange}
             className="flex-1 bg-transparent outline-none border-0 p-0 text-sm"
-            placeholder="Search attenddee"
+            placeholder="Search attendee"
           />
         </div>
 
@@ -99,52 +114,54 @@ export function AttendeeList() {
           </tr>
         </thead>
         <tbody>
-          {attendees
-            .slice(minPaginationValues, maxPaginationValues)
-            .map((attendee) => (
-              <TableRow
-                key={attendee.id}
-                className="border-b border-white/10 hover:bg-white/5"
-              >
-                <TableCell>
-                  <input
-                    type="checkbox"
-                    className="size-4 bg-black/20 rounded border border-white/10"
-                  />
-                </TableCell>
-                <TableCell>{attendee.code}</TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-semibold text-white">
-                      {attendee.name}
-                    </span>
-                    <span>{attendee.email}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {formatDistance(attendee.createdAt, new Date(), {
+          {attendees.map((attendee) => (
+            <TableRow
+              key={attendee.id}
+              className="border-b border-white/10 hover:bg-white/5"
+            >
+              <TableCell>
+                <input
+                  type="checkbox"
+                  className="size-4 bg-black/20 rounded border border-white/10"
+                />
+              </TableCell>
+              <TableCell>{attendee.id}</TableCell>
+              <TableCell>
+                <div className="flex flex-col gap-1">
+                  <span className="font-semibold text-white">
+                    {attendee.name}
+                  </span>
+                  <span>{attendee.email}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                {formatDistance(attendee.createdAt, new Date(), {
+                  locale: enUS,
+                  addSuffix: true,
+                })}
+              </TableCell>
+              <TableCell>
+                {attendee.checkedInAt ? (
+                  formatDistance(attendee.checkedInAt, new Date(), {
                     locale: enUS,
                     addSuffix: true,
-                  })}
-                </TableCell>
-                <TableCell>
-                  {formatDistance(attendee.checkedInAt, new Date(), {
-                    locale: enUS,
-                    addSuffix: true,
-                  })}
-                </TableCell>
-                <TableCell>
-                  <IconButton transparent>
-                    <MoreHorizontal className="size-4" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
+                  })
+                ) : (
+                  <span className="color: text-zinc-500">Did not check in</span>
+                )}
+              </TableCell>
+              <TableCell>
+                <IconButton transparent>
+                  <MoreHorizontal className="size-4" />
+                </IconButton>
+              </TableCell>
+            </TableRow>
+          ))}
         </tbody>
         <tfoot>
           <tr>
             <TableCell className="py-3 px-4 text-sm text-zinc-300" colSpan={3}>
-              Showing 10 of {attendees.length} items
+              Showing {attendees.length} of {total} items
             </TableCell>
             <td
               className="py-3 px-4 text-sm text-zinc-300 text-right"
@@ -152,7 +169,7 @@ export function AttendeeList() {
             >
               <div className="inline-flex items-center gap-8">
                 <span>
-                  Page {pagination} of {lastPage}
+                  Page {pagination} of {totalPages}
                 </span>
                 <div className="flex gap-1.5">
                   <IconButton
@@ -169,13 +186,13 @@ export function AttendeeList() {
                   </IconButton>
                   <IconButton
                     onClick={goToNextPage}
-                    disabled={pagination === lastPage}
+                    disabled={pagination === totalPages}
                   >
                     <ChevronRight className="size-4" />
                   </IconButton>
                   <IconButton
                     onClick={goToLastPage}
-                    disabled={pagination === lastPage}
+                    disabled={pagination === totalPages}
                   >
                     <ChevronsRight className="size-4" />
                   </IconButton>
