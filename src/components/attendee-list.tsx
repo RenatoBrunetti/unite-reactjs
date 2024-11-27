@@ -34,7 +34,14 @@ export function AttendeeList() {
     }
     return 1;
   });
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => {
+    const url = new URL(window.location.toString());
+    if (url.searchParams.has("search")) {
+      return url.searchParams.get("search") ?? "";
+    }
+    return "";
+  });
+  const [inputSearch, setInputSearch] = useState(search);
   const [total, setTotal] = useState(0);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
 
@@ -61,10 +68,19 @@ export function AttendeeList() {
   }, [page, search]);
 
   // Search
+  function setCurrentSearch(search: string) {
+    const url = new URL(window.location.toString());
+    url.searchParams.set("search", search);
+    window.history.pushState({}, "", url);
+    setSearch(search);
+  }
+
   function onSearchInputChange(event: ChangeEvent<HTMLInputElement>) {
+    setInputSearch(event.target.value);
     const typingTimeout = setTimeout(() => {
-      setSearch(event.target.value);
-    }, 1500);
+      setCurrentSearch(event.target.value);
+      setCurrentPage(1);
+    }, 1000);
     return () => clearTimeout(typingTimeout);
   }
 
@@ -108,6 +124,7 @@ export function AttendeeList() {
           <Search className="size-4 text-emerald-300" />
           <input
             onChange={onSearchInputChange}
+            value={inputSearch}
             className="flex-1 bg-transparent border-0 p-0 text-sm outline-none border-transparent focus:border-transparent focus:ring-0"
             placeholder="Search attendee"
           />
