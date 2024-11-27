@@ -27,9 +27,15 @@ interface Attendee {
 
 export function AttendeeList() {
   const hasPaginationBeenRendered = useRef(false);
+  const [page, setPage] = useState(() => {
+    const url = new URL(window.location.toString());
+    if (url.searchParams.has("page")) {
+      return Number(url.searchParams.get("page"));
+    }
+    return 1;
+  });
   const [search, setSearch] = useState("");
   const [total, setTotal] = useState(0);
-  const [pagination, setPagination] = useState(1);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
 
   const offset = 10;
@@ -41,7 +47,7 @@ export function AttendeeList() {
       const path = `/events/${eventId}/attendees`;
 
       const url = new URL(server.concat(path));
-      url.searchParams.set("pageIndex", String(pagination - 1));
+      url.searchParams.set("pageIndex", String(page - 1));
       if (search.length > 0) url.searchParams.set("query", search);
 
       fetch(url)
@@ -52,7 +58,7 @@ export function AttendeeList() {
         });
     }
     hasPaginationBeenRendered.current = true;
-  }, [pagination, search]);
+  }, [page, search]);
 
   // Search
   function onSearchInputChange(event: ChangeEvent<HTMLInputElement>) {
@@ -63,27 +69,34 @@ export function AttendeeList() {
   }
 
   // Pagination
+  function setCurrentPage(page: number) {
+    const url = new URL(window.location.toString());
+    url.searchParams.set("page", String(page));
+    window.history.pushState({}, "", url);
+    setPage(page);
+  }
+
   function goToFirstPage() {
-    if (pagination > 1) {
-      setPagination(1);
+    if (page > 1) {
+      setCurrentPage(1);
     }
   }
 
   function goToPreviousPage() {
-    if (pagination > 1) {
-      setPagination((current) => current - 1);
+    if (page > 1) {
+      setCurrentPage(page - 1);
     }
   }
 
   function goToNextPage() {
-    if (pagination < totalPages) {
-      setPagination((current) => current + 1);
+    if (page < totalPages) {
+      setCurrentPage(page + 1);
     }
   }
 
   function goToLastPage() {
-    if (pagination < totalPages) {
-      setPagination(totalPages);
+    if (page < totalPages) {
+      setCurrentPage(totalPages);
     }
   }
 
@@ -173,30 +186,24 @@ export function AttendeeList() {
             >
               <div className="inline-flex items-center gap-8">
                 <span>
-                  Page {pagination} of {totalPages}
+                  Page {page} of {totalPages}
                 </span>
                 <div className="flex gap-1.5">
-                  <IconButton
-                    onClick={goToFirstPage}
-                    disabled={pagination === 1}
-                  >
+                  <IconButton onClick={goToFirstPage} disabled={page === 1}>
                     <ChevronsLeft className="size-4" />
                   </IconButton>
-                  <IconButton
-                    onClick={goToPreviousPage}
-                    disabled={pagination === 1}
-                  >
+                  <IconButton onClick={goToPreviousPage} disabled={page === 1}>
                     <ChevronLeft className="size-4" />
                   </IconButton>
                   <IconButton
                     onClick={goToNextPage}
-                    disabled={pagination === totalPages}
+                    disabled={page === totalPages}
                   >
                     <ChevronRight className="size-4" />
                   </IconButton>
                   <IconButton
                     onClick={goToLastPage}
-                    disabled={pagination === totalPages}
+                    disabled={page === totalPages}
                   >
                     <ChevronsRight className="size-4" />
                   </IconButton>
