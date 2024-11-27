@@ -39,8 +39,11 @@ export function AttendeeList() {
     if (hasPaginationBeenRendered.current) {
       const eventId = "9e9bd979-9d10-4915-b339-3786b1634f70";
       const path = `/events/${eventId}/attendees`;
-      const params = `?pageIndex=${pagination - 1}`;
-      const url = server.concat(path, params);
+
+      const url = new URL(server.concat(path));
+      url.searchParams.set("pageIndex", String(pagination - 1));
+      if (search.length > 0) url.searchParams.set("query", search);
+
       fetch(url)
         .then((response) => response.json())
         .then((data) => {
@@ -49,11 +52,14 @@ export function AttendeeList() {
         });
     }
     hasPaginationBeenRendered.current = true;
-  }, [pagination]);
+  }, [pagination, search]);
 
   // Search
   function onSearchInputChange(event: ChangeEvent<HTMLInputElement>) {
-    setSearch(event.target.value);
+    const typingTimeout = setTimeout(() => {
+      setSearch(event.target.value);
+    }, 1500);
+    return () => clearTimeout(typingTimeout);
   }
 
   // Pagination
@@ -89,17 +95,15 @@ export function AttendeeList() {
           <Search className="size-4 text-emerald-300" />
           <input
             onChange={onSearchInputChange}
-            className="flex-1 bg-transparent outline-none border-0 p-0 text-sm"
+            className="flex-1 bg-transparent border-0 p-0 text-sm outline-none border-transparent focus:border-transparent focus:ring-0"
             placeholder="Search attendee"
           />
         </div>
-
-        {search}
       </div>
 
       <Table>
         <thead>
-          <tr className="border-b border-white/10">
+          <tr className="border-b border-white/10 bg-zinc-900">
             <TableHeader>
               <input
                 type="checkbox"
@@ -158,7 +162,7 @@ export function AttendeeList() {
             </TableRow>
           ))}
         </tbody>
-        <tfoot>
+        <tfoot className="bg-zinc-900">
           <tr>
             <TableCell className="py-3 px-4 text-sm text-zinc-300" colSpan={3}>
               Showing {attendees.length} of {total} items
